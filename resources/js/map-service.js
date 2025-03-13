@@ -18,8 +18,24 @@ class MapService {
             window.L.Icon.Default.prototype.options.iconRetinaUrl = '/img/marker-icon.png';
         }
 
+        // Check if LeafletWrapper is available
+        this.hasLeafletWrapper = typeof window.LeafletWrapper === 'object';
+
         // Check if MarkerClusterGroup is available
-        this.hasMarkerCluster = typeof window.L.markerClusterGroup === 'function';
+        this.hasMarkerCluster = window.L && typeof window.L.MarkerClusterGroup === 'function';
+
+        // Log initialization status
+        if (this.hasLeafletWrapper) {
+            console.log('MapService: LeafletWrapper is available');
+        } else {
+            console.warn('MapService: LeafletWrapper is not available, using window.L directly');
+        }
+
+        if (this.hasMarkerCluster) {
+            console.log('MapService: MarkerClusterGroup is available');
+        } else {
+            console.warn('MapService: MarkerClusterGroup is not available, will use layerGroup instead');
+        }
     }
 
     /**
@@ -44,7 +60,9 @@ class MapService {
                 scrollWheelZoom: true
             };
 
-            const map = window.L.map(elementId, { ...defaultOptions, ...options });
+            // Use LeafletWrapper if available, otherwise fall back to window.L
+            const L = this.hasLeafletWrapper ? window.LeafletWrapper : window.L;
+            const map = L.map(elementId, { ...defaultOptions, ...options });
 
             // Add tile layer
             this.addTileLayer(map);
@@ -77,7 +95,9 @@ class MapService {
      */
     addTileLayer(map) {
         try {
-            return window.L.tileLayer(this.defaultTileLayer, {
+            // Use LeafletWrapper if available, otherwise fall back to window.L
+            const L = this.hasLeafletWrapper ? window.LeafletWrapper : window.L;
+            return L.tileLayer(this.defaultTileLayer, {
                 attribution: this.defaultAttribution,
                 maxZoom: 19
             }).addTo(map);
@@ -108,7 +128,9 @@ class MapService {
                 showResultIcons: true
             }).on('markgeocode', function(e) {
                 const bbox = e.geocode.bbox;
-                const poly = window.L.polygon([
+                // Use LeafletWrapper if available, otherwise fall back to window.L
+                const L = window.LeafletWrapper || window.L;
+                const poly = L.polygon([
                     bbox.getSouthEast(),
                     bbox.getNorthEast(),
                     bbox.getNorthWest(),
@@ -131,23 +153,27 @@ class MapService {
      */
     createMarkerGroup(options = {}) {
         try {
+            // Use LeafletWrapper if available, otherwise fall back to window.L
+            const L = this.hasLeafletWrapper ? window.LeafletWrapper : window.L;
+
+            // Check if MarkerClusterGroup is available
             if (this.hasMarkerCluster) {
-                return window.L.markerClusterGroup({
+                return new window.L.MarkerClusterGroup({
                     showCoverageOnHover: false,
                     maxClusterRadius: 50,
                     iconCreateFunction: function(cluster) {
                         const count = cluster.getChildCount();
-                        return window.L.divIcon({
+                        return L.divIcon({
                             html: `<div class="cluster-marker">${count}</div>`,
                             className: 'custom-cluster-marker',
-                            iconSize: window.L.point(40, 40)
+                            iconSize: L.point(40, 40)
                         });
                     },
                     ...options
                 });
             } else {
-                console.warn('Using layer group instead of marker cluster');
-                return window.L.layerGroup();
+                console.warn('MarkerClusterGroup not available, using layerGroup instead');
+                return L.layerGroup();
             }
         } catch (error) {
             console.error('Error creating marker group:', error);
@@ -166,7 +192,9 @@ class MapService {
      */
     addMarker(map, lat, lng, options = {}) {
         try {
-            return window.L.marker([lat, lng], options).addTo(map);
+            // Use LeafletWrapper if available, otherwise fall back to window.L
+            const L = this.hasLeafletWrapper ? window.LeafletWrapper : window.L;
+            return L.marker([lat, lng], options).addTo(map);
         } catch (error) {
             console.error('Error adding marker:', error);
             return null;
@@ -324,6 +352,9 @@ class MapService {
         const totalPoints = points.length;
         let processedCount = 0;
 
+        // Use LeafletWrapper if available, otherwise fall back to window.L
+        const L = this.hasLeafletWrapper ? window.LeafletWrapper : window.L;
+
         // Process markers in chunks for better performance
         const processChunk = (startIndex) => {
             const endIndex = Math.min(startIndex + chunkSize, totalPoints);
@@ -336,7 +367,7 @@ class MapService {
                         continue;
                     }
 
-                    const marker = window.L.marker([point.lat, point.lng]);
+                    const marker = L.marker([point.lat, point.lng]);
 
                     // Add popup if createPopupContent function is provided
                     if (typeof createPopupContent === 'function') {

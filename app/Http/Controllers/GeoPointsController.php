@@ -204,4 +204,57 @@ class GeoPointsController extends Controller
         return redirect()->route('geo-points.index', ['city_id' => $cityId, 'currentLocale' => $currentLocale])
             ->with('message', 'Geo point deleted successfully.');
     }
+
+    /**
+     * Display all geo points on a map.
+     */
+    public function map(Request $request)
+    {
+        $currentLocale = app('currentLocale');
+        $search = $request->query('search', '');
+        $cityId = $request->query('city_id');
+        $city = null;
+
+        $nameField = "name_{$currentLocale}";
+        $query = GeoPoint::query();
+
+        if ($cityId) {
+            $query->where('city_id', $cityId);
+            $city = City::findOrFail($cityId);
+        }
+
+        if (!empty($search)) {
+            $query->where($nameField, 'like', '%' . $search . '%');
+        }
+
+        $geoPoints = $query->with('city.country')->get();
+        $cities = City::with('country')->orderBy("city_name_{$currentLocale}")->get();
+
+        // Group geo points by city for better map organization
+        $geoPointsByCity = $geoPoints->groupBy('city_id')->map(function ($points, $cityId) use ($currentLocale) {
+            $city = $points->first()->city;
+            return [
+                'name' => $city->{"city_name_{$currentLocale}"},
+                'countryName' => $city->country->{"name_{$currentLocale}"},
+                'points' => $points->map(function ($point) use ($currentLocale) {
+                    return [
+                        'id' => $point->id,
+                        'name' => $point->{"name_{$currentLocale}"},
+                        'description' => $point->{"description_{$currentLocale}"},
+                        'lat' => $point->lat,
+                        'lng' => $point->long,
+                        'url' => route('geo-points.show', ['geo_point' => $point, 'currentLocale' => $currentLocale])
+                    ];
+                })->values()->toArray()
+            ];
+        })->values()->toArray();
+
+        return view('geo-points.map', compact(
+            'geoPointsByCity',
+            'cities',
+            'city',
+            'search',
+            'currentLocale'
+        ));
+    }
 }

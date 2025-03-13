@@ -2,11 +2,6 @@
  * Map Integration with OpenStreetMap using Leaflet
  */
 
-// Set custom icon paths for Leaflet
-window.L.Icon.Default.prototype.options.iconUrl = '/img/marker-icon.png';
-window.L.Icon.Default.prototype.options.shadowUrl = '/img/marker-shadow.png';
-window.L.Icon.Default.prototype.options.iconRetinaUrl = '/img/marker-icon.png';
-
 // Initialize a single geo point map with zoom level 14
 window.initSingleGeoPointMap = function(elementId, lat, lng, name, description, cityName, countryName) {
     try {
@@ -60,8 +55,11 @@ window.initMultiPointMap = function(elementId, points) {
             return null;
         }
 
+        // Get the appropriate Leaflet instance
+        const L = window.LeafletWrapper || window.L;
+
         // Create bounds to fit all markers
-        const bounds = window.L.latLngBounds();
+        const bounds = L.latLngBounds();
 
         // Create a marker cluster group
         const markers = window.mapService.createMarkerGroup();
@@ -127,6 +125,9 @@ window.initCityGroupedMap = function(elementId, data) {
 
         if (!map) return null;
 
+        // Get the appropriate Leaflet instance
+        const L = window.LeafletWrapper || window.L;
+
         // Check what type of data we're dealing with
         const isCountriesView = data.length > 0 && data[0].hasOwnProperty('cities');
         const isCitiesView = data.length > 0 && data[0].hasOwnProperty('geoPointsCount') && !data[0].hasOwnProperty('points');
@@ -139,7 +140,7 @@ window.initCityGroupedMap = function(elementId, data) {
         }
 
         // Create bounds to fit all markers
-        const bounds = window.L.latLngBounds();
+        const bounds = L.latLngBounds();
         let hasPoints = false;
 
         // Create a marker cluster group for city markers
@@ -147,10 +148,10 @@ window.initCityGroupedMap = function(elementId, data) {
             maxClusterRadius: 80,
             iconCreateFunction: function(cluster) {
                 const count = cluster.getChildCount();
-                return window.L.divIcon({
+                return L.divIcon({
                     html: `<div class="cluster-marker">${count} Cities</div>`,
                     className: 'custom-cluster-marker',
-                    iconSize: window.L.point(60, 40)
+                    iconSize: L.point(60, 40)
                 });
             }
         });
@@ -178,7 +179,7 @@ window.initCityGroupedMap = function(elementId, data) {
                             const lat = 20 + Math.random() * 40; // Random lat between 20 and 60
                             const lng = -30 + Math.random() * 60; // Random lng between -30 and 30
 
-                            const marker = window.L.marker([lat, lng]);
+                            const marker = L.marker([lat, lng]);
 
                             // Add popup with city information
                             let popupContent = `<strong>${city.name}</strong>`;
@@ -198,8 +199,8 @@ window.initCityGroupedMap = function(elementId, data) {
                             bounds.extend([lat, lng]);
 
                             // Add city label
-                            window.L.marker([lat, lng], {
-                                icon: window.L.divIcon({
+                            L.marker([lat, lng], {
+                                icon: L.divIcon({
                                     className: 'city-label',
                                     html: `<div class="bg-primary text-white px-2 py-1 rounded shadow-sm">${city.name} (${city.geoPointsCount})</div>`,
                                     iconSize: [100, 20],
@@ -230,7 +231,7 @@ window.initCityGroupedMap = function(elementId, data) {
                     const lat = 20 + Math.random() * 40; // Random lat between 20 and 60
                     const lng = -30 + Math.random() * 60; // Random lng between -30 and 30
 
-                    const marker = window.L.marker([lat, lng]);
+                    const marker = L.marker([lat, lng]);
 
                     // Add popup with city information
                     let popupContent = `<strong>${city.name}</strong>`;
@@ -252,8 +253,8 @@ window.initCityGroupedMap = function(elementId, data) {
                     bounds.extend([lat, lng]);
 
                     // Add city label
-                    window.L.marker([lat, lng], {
-                        icon: window.L.divIcon({
+                    L.marker([lat, lng], {
+                        icon: L.divIcon({
                             className: 'city-label',
                             html: `<div class="bg-primary text-white px-2 py-1 rounded shadow-sm">${city.name} (${city.geoPointsCount})</div>`,
                             iconSize: [100, 20],
@@ -264,95 +265,331 @@ window.initCityGroupedMap = function(elementId, data) {
                     console.error('Error processing city:', cityError);
                 }
             });
-        } else {
-            // Original code for cities with geo points
+        } else if (isGeoPointsView) {
+            // Handle cities with actual geo points
             data.forEach(city => {
                 try {
                     if (!city.points || city.points.length === 0) {
-                        return; // Skip cities with no points
+                        return; // Skip cities with no geo points
                     }
 
-                    hasPoints = true;
+                    // Create a marker cluster group for geo points
+                    const geoPointMarkers = window.mapService.createMarkerGroup();
 
-                    // Create a marker cluster group for this city's points
-                    const pointsCluster = window.mapService.createMarkerGroup({
-                        maxClusterRadius: 50
-                    });
-
-                    // Add markers for all geo points in this city
+                    // Process each geo point in the city
                     city.points.forEach(point => {
                         try {
-                            const marker = window.L.marker([point.lat, point.lng]);
-
-                            // Add popup with information if provided
-                            if (point.name) {
-                                let popupContent = `<strong>${point.name}</strong>`;
-
-                                if (point.description) {
-                                    popupContent += `<br><em>${point.description}</em>`;
-                                }
-
-                                popupContent += `<br><small>${city.name}`;
-                                if (city.countryName) {
-                                    popupContent += `, ${city.countryName}`;
-                                }
-                                popupContent += `</small>`;
-
-                                if (point.url) {
-                                    popupContent += `<br><a href="${point.url}" class="btn btn-sm btn-primary mt-2">View Details</a>`;
-                                }
-
-                                window.mapService.addPopup(marker, popupContent);
+                            if (!point.lat || !point.lng) {
+                                return; // Skip points without coordinates
                             }
 
+                            hasPoints = true;
+
+                            const marker = L.marker([point.lat, point.lng]);
+
+                            // Add popup with geo point information
+                            let popupContent = `<strong>${point.name}</strong>`;
+                            if (point.description) {
+                                popupContent += `<br><em>${point.description}</em>`;
+                            }
+                            popupContent += `<br><small>City: ${city.name}`;
+                            if (city.countryName) {
+                                popupContent += `, ${city.countryName}`;
+                            }
+                            popupContent += `</small>`;
+
+                            if (point.url) {
+                                popupContent += `<br><a href="${point.url}" class="btn btn-sm btn-primary mt-2">View Details</a>`;
+                            }
+
+                            window.mapService.addPopup(marker, popupContent);
+
                             // Add to cluster group
-                            pointsCluster.addLayer(marker);
+                            geoPointMarkers.addLayer(marker);
 
                             // Add to bounds
                             bounds.extend([point.lat, point.lng]);
                         } catch (pointError) {
-                            console.error('Error processing point:', pointError);
+                            console.error('Error processing geo point:', pointError);
                         }
                     });
 
-                    // Add the cluster group to the map
-                    map.addLayer(pointsCluster);
+                    // Add geo point markers to map
+                    map.addLayer(geoPointMarkers);
 
-                    // Calculate the center of all points in this city
-                    const cityCenter = pointsCluster.getBounds().getCenter();
+                    // Calculate city center (average of all points)
+                    if (city.points.length > 0) {
+                        let totalLat = 0;
+                        let totalLng = 0;
+                        let validPoints = 0;
 
-                    // Add city label at the center of its points
-                    window.L.marker([cityCenter.lat, cityCenter.lng], {
-                        icon: window.L.divIcon({
-                            className: 'city-label',
-                            html: `<div class="bg-primary text-white px-2 py-1 rounded shadow-sm">${city.name} (${city.points.length})</div>`,
-                            iconSize: [100, 20],
-                            iconAnchor: [50, 10]
-                        })
-                    }).addTo(map);
+                        city.points.forEach(point => {
+                            if (point.lat && point.lng) {
+                                totalLat += parseFloat(point.lat);
+                                totalLng += parseFloat(point.lng);
+                                validPoints++;
+                            }
+                        });
+
+                        if (validPoints > 0) {
+                            const avgLat = totalLat / validPoints;
+                            const avgLng = totalLng / validPoints;
+
+                            // Add city label at the center
+                            L.marker([avgLat, avgLng], {
+                                icon: L.divIcon({
+                                    className: 'city-label',
+                                    html: `<div class="bg-primary text-white px-2 py-1 rounded shadow-sm">${city.name} (${city.points.length})</div>`,
+                                    iconSize: [100, 20],
+                                    iconAnchor: [50, 10]
+                                })
+                            }).addTo(map);
+                        }
+                    }
                 } catch (cityError) {
-                    console.error('Error processing city:', cityError);
+                    console.error('Error processing city with points:', cityError);
                 }
             });
         }
 
-        // Add the city markers cluster group to the map if we're in countries or cities view
-        if (isCountriesView || isCitiesView) {
+        // Add city markers to map if we have any
+        if (cityMarkers.getLayers().length > 0) {
             map.addLayer(cityMarkers);
         }
 
-        if (hasPoints) {
-            // Fit map to bounds with padding
+        // If we have points, fit map to bounds
+        if (hasPoints && bounds.isValid()) {
             window.mapService.fitMapToBounds(map, bounds);
         } else {
-            // If no points, show a default view
+            // Default view if no points
             map.setView([40, 0], 2);
-            window.mapService.showMapError(elementId, 'No geo points available to display on the map.');
         }
 
         return map;
     } catch (error) {
         console.error('Error initializing city grouped map:', error);
+        window.mapService.showMapError(elementId, 'Failed to initialize map. Please try refreshing the page.');
+        return null;
+    }
+};
+
+// Initialize a map for a city with its geo points
+window.initCityMap = function(elementId, cityData) {
+    try {
+        // Create map without initial view (will be set based on points)
+        const map = window.mapService.createMap(elementId);
+
+        if (!map) return null;
+
+        // Get the appropriate Leaflet instance
+        const L = window.LeafletWrapper || window.L;
+
+        // If no geo points, show message and return
+        if (!cityData || !cityData.geoPoints || cityData.geoPoints.length === 0) {
+            window.mapService.showMapError(elementId, 'No geo points available to display on the map.');
+            return null;
+        }
+
+        // Create bounds to fit all markers
+        const bounds = L.latLngBounds();
+
+        // Create a marker cluster group
+        const markers = window.mapService.createMarkerGroup();
+
+        // Show loading indicator
+        const loadingElement = document.getElementById(`${elementId}-loading`);
+        if (loadingElement) {
+            loadingElement.style.display = 'flex';
+        }
+
+        // Process each geo point
+        cityData.geoPoints.forEach(point => {
+            try {
+                if (!point.lat || !point.lng) {
+                    return; // Skip points without coordinates
+                }
+
+                const marker = L.marker([point.lat, point.lng]);
+
+                // Add popup with geo point information
+                let popupContent = `<strong>${point.name}</strong>`;
+                if (point.description) {
+                    popupContent += `<br><em>${point.description}</em>`;
+                }
+                popupContent += `<br><small>City: ${cityData.name}`;
+                if (cityData.countryName) {
+                    popupContent += `, ${cityData.countryName}`;
+                }
+                popupContent += `</small>`;
+
+                if (point.url) {
+                    popupContent += `<br><a href="${point.url}" class="btn btn-sm btn-primary mt-2">View Details</a>`;
+                }
+
+                window.mapService.addPopup(marker, popupContent);
+
+                // Add to cluster group
+                markers.addLayer(marker);
+
+                // Add to bounds
+                bounds.extend([point.lat, point.lng]);
+            } catch (pointError) {
+                console.error('Error processing geo point:', pointError);
+            }
+        });
+
+        // Add markers to map
+        map.addLayer(markers);
+
+        // Fit map to bounds with padding
+        if (bounds.isValid()) {
+            window.mapService.fitMapToBounds(map, bounds);
+        } else {
+            // Default view if no valid bounds
+            map.setView([40, 0], 2);
+        }
+
+        // Hide loading indicator
+        if (loadingElement) {
+            loadingElement.style.display = 'none';
+        }
+
+        return map;
+    } catch (error) {
+        console.error('Error initializing city map:', error);
+        window.mapService.showMapError(elementId, 'Failed to initialize map. Please try refreshing the page.');
+        return null;
+    }
+};
+
+// Initialize a map for a country with its cities and geo points
+window.initCountryMap = function(elementId, countryData) {
+    try {
+        // Create map without initial view (will be set based on points)
+        const map = window.mapService.createMap(elementId);
+
+        if (!map) return null;
+
+        // Get the appropriate Leaflet instance
+        const L = window.LeafletWrapper || window.L;
+
+        // If no cities, show message and return
+        if (!countryData || !countryData.cities || countryData.cities.length === 0) {
+            window.mapService.showMapError(elementId, 'No cities available to display on the map.');
+            return null;
+        }
+
+        // Create bounds to fit all markers
+        const bounds = L.latLngBounds();
+        let hasPoints = false;
+
+        // Create a marker cluster group for cities
+        const cityMarkers = window.mapService.createMarkerGroup({
+            maxClusterRadius: 80
+        });
+
+        // Process each city
+        countryData.cities.forEach(city => {
+            try {
+                if (!city.geoPoints || city.geoPoints.length === 0) {
+                    return; // Skip cities with no geo points
+                }
+
+                // Create a marker cluster group for geo points
+                const geoPointMarkers = window.mapService.createMarkerGroup();
+
+                // Calculate city center (average of all points)
+                let totalLat = 0;
+                let totalLng = 0;
+                let validPoints = 0;
+
+                // Process each geo point
+                city.geoPoints.forEach(point => {
+                    try {
+                        if (!point.lat || !point.lng) {
+                            return; // Skip points without coordinates
+                        }
+
+                        hasPoints = true;
+                        totalLat += parseFloat(point.lat);
+                        totalLng += parseFloat(point.lng);
+                        validPoints++;
+
+                        const marker = L.marker([point.lat, point.lng]);
+
+                        // Add popup with geo point information
+                        let popupContent = `<strong>${point.name}</strong>`;
+                        if (point.description) {
+                            popupContent += `<br><em>${point.description}</em>`;
+                        }
+                        popupContent += `<br><small>City: ${city.name}, ${countryData.name}</small>`;
+
+                        if (point.url) {
+                            popupContent += `<br><a href="${point.url}" class="btn btn-sm btn-primary mt-2">View Details</a>`;
+                        }
+
+                        window.mapService.addPopup(marker, popupContent);
+
+                        // Add to cluster group
+                        geoPointMarkers.addLayer(marker);
+
+                        // Add to bounds
+                        bounds.extend([point.lat, point.lng]);
+                    } catch (pointError) {
+                        console.error('Error processing geo point:', pointError);
+                    }
+                });
+
+                // Add geo point markers to map
+                map.addLayer(geoPointMarkers);
+
+                // If we have valid points, add a city marker at the center
+                if (validPoints > 0) {
+                    const avgLat = totalLat / validPoints;
+                    const avgLng = totalLng / validPoints;
+
+                    const cityMarker = L.marker([avgLat, avgLng], {
+                        icon: L.divIcon({
+                            className: 'city-marker',
+                            html: `<div class="bg-primary text-white px-2 py-1 rounded shadow-sm">${city.name} (${validPoints})</div>`,
+                            iconSize: [100, 20],
+                            iconAnchor: [50, 10]
+                        })
+                    });
+
+                    // Add popup with city information
+                    let popupContent = `<strong>${city.name}</strong>`;
+                    popupContent += `<br><small>Country: ${countryData.name}</small>`;
+                    popupContent += `<br><small>Geo Points: ${validPoints}</small>`;
+
+                    if (city.url) {
+                        popupContent += `<br><a href="${city.url}" class="btn btn-sm btn-primary mt-2">View City</a>`;
+                    }
+
+                    window.mapService.addPopup(cityMarker, popupContent);
+
+                    // Add to city markers
+                    cityMarkers.addLayer(cityMarker);
+                }
+            } catch (cityError) {
+                console.error('Error processing city:', cityError);
+            }
+        });
+
+        // Add city markers to map
+        map.addLayer(cityMarkers);
+
+        // If we have points, fit map to bounds
+        if (hasPoints && bounds.isValid()) {
+            window.mapService.fitMapToBounds(map, bounds);
+        } else {
+            // Default view if no points
+            map.setView([40, 0], 2);
+        }
+
+        return map;
+    } catch (error) {
+        console.error('Error initializing country map:', error);
         window.mapService.showMapError(elementId, 'Failed to initialize map. Please try refreshing the page.');
         return null;
     }

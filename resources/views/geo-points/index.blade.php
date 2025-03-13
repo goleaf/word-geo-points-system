@@ -12,6 +12,9 @@
                 @endif
             </h3>
             <div>
+                <a href="{{ route('geo-points.map', ['city_id' => $city->id ?? null, 'currentLocale' => $currentLocale ?? app()->getLocale()]) }}" class="btn btn-info me-2">
+                    <i class="bi bi-map"></i> Map View
+                </a>
                 @if(isset($city))
                     <a href="{{ route('cities.index', ['country_id' => $city->country_id, 'currentLocale' => $currentLocale ?? app()->getLocale()]) }}" class="btn btn-secondary me-2">
                         <i class="bi bi-arrow-left"></i> Back to Cities

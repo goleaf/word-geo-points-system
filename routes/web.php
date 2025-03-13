@@ -35,6 +35,9 @@ Route::resource('geo-points', GeoPointsController::class)->parameters([
     'geo-points' => 'geo_point'
 ]);
 
+// Map view for all geo points
+Route::get('/geo-points/map', [GeoPointsController::class, 'map'])->name('geo-points.map');
+
 // Language Manager Routes
 Route::resource('language-manager', LanguageManagerController::class)->except(['show'])->parameters(['language-manager' => 'code']);
 

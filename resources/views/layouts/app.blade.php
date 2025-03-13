@@ -39,8 +39,13 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('geo-points.*') ? 'active' : '' }}" href="{{ route('geo-points.index', ['currentLocale' => $currentLocale ?? app()->getLocale()]) }}">
+                        <a class="nav-link {{ request()->routeIs('geo-points.index') ? 'active' : '' }}" href="{{ route('geo-points.index', ['currentLocale' => $currentLocale ?? app()->getLocale()]) }}">
                             <i class="bi bi-geo-alt"></i> Geo Points
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('geo-points.map') ? 'active' : '' }}" href="{{ route('geo-points.map', ['currentLocale' => $currentLocale ?? app()->getLocale()]) }}">
+                            <i class="bi bi-map"></i> Points Map
                         </a>
                     </li>
                 </ul>
