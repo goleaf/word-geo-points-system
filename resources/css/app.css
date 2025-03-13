@@ -1,0 +1,228 @@
+/* Import Bootstrap */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+/* Bootstrap Icons */
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+
+/* SweetAlert2 */
+@import 'sweetalert2/dist/sweetalert2.min.css';
+
+/* Custom styles */
+body {
+    font-family: 'Figtree', sans-serif;
+    background-color: #f8f9fa;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-radius: 0.5rem;
+    border: none;
+}
+
+.card-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    border-top-left-radius: 0.5rem !important;
+    border-top-right-radius: 0.5rem !important;
+}
+
+.btn {
+    border-radius: 0.25rem;
+}
+
+/* Table styling */
+.table th {
+    font-weight: 600;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+    transition: background-color 0.2s ease;
+}
+
+.table thead.table-dark th {
+    background-color: #212529;
+    color: white;
+    border-color: #32383e;
+}
+
+/* Heading styles */
+h1, h2, h3, h4, h5 {
+    position: relative;
+    padding: 0.5rem 0;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+h1::after, h2::after, h3::after, h4::after, h5::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #007bff, #6610f2);
+}
+
+h1::after {
+    width: 80px;
+}
+
+h2::after {
+    width: 70px;
+}
+
+h3::after {
+    width: 60px;
+}
+
+h4::after {
+    width: 50px;
+}
+
+h5::after {
+    width: 40px;
+}
+
+.card-header h1, .card-header h2, .card-header h3, .card-header h4, .card-header h5 {
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.card-header h1::after, .card-header h2::after, .card-header h3::after,
+.card-header h4::after, .card-header h5::after {
+    display: none;
+}
+
+/* Icon in headings */
+h1 .bi, h2 .bi, h3 .bi, h4 .bi, h5 .bi {
+    margin-right: 0.5rem;
+    color: #007bff;
+}
+
+/* Pagination styling */
+.pagination {
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+.page-item.active .page-link {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.page-link {
+    color: #0d6efd;
+    border-radius: 0.25rem;
+    margin: 0 2px;
+}
+
+.page-link:hover {
+    color: #0a58ca;
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+    z-index: 2;
+}
+
+.page-item:first-child .page-link,
+.page-item:last-child .page-link {
+    border-radius: 0.25rem;
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Form controls */
+.form-control:focus, .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Action buttons alignment */
+.text-end .action-buttons-container {
+    justify-content: flex-end;
+}
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source "../**/*.blade.php";
+@source "../**/*.js";
+@source "../**/*.vue";
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* Map Styles */
+.city-label {
+    font-weight: bold;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+}
+
+.city-label div {
+    font-weight: bold;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* Custom Cluster Marker Styles */
+.custom-cluster-marker {
+    background: none;
+    border: none;
+}
+
+.cluster-marker {
+    width: 40px;
+    height: 40px;
+    background-color: rgba(0, 123, 255, 0.8);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.cluster-marker:hover {
+    background-color: rgba(0, 123, 255, 1);
+    box-shadow: 0 0 0 8px rgba(0, 123, 255, 0.4);
+    transform: scale(1.1);
+}
+
+/* Fix for Leaflet marker icon paths */
+.leaflet-default-icon-path {
+    background-image: url(/img/marker-icon.png);
+}
+
+.leaflet-default-shadow-path {
+    background-image: url(/img/marker-shadow.png);
+}
+
+/* Translation styles */
+.translate-button {
+    margin-bottom: 15px;
+}
+
+.translate-button .bi {
+    margin-right: 5px;
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
