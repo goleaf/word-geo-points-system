@@ -23,6 +23,9 @@ import * as Geocoder from 'leaflet-control-geocoder';
 import 'leaflet-control-geocoder/dist/Control.Geocoder.css';
 window.LeafletGeocoder = Geocoder;
 
+// Import map service
+import './map-service';
+
 // Import custom scripts
 import './delete-confirmation';
 import './map-integration';
@@ -39,4 +42,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Enable Bootstrap popovers
     const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
     const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
+
+    // Ensure MarkerClusterGroup is properly attached to L
+    if (typeof window.L.MarkerClusterGroup === 'function' && typeof window.L.markerClusterGroup !== 'function') {
+        window.L.markerClusterGroup = function(options) {
+            return new window.L.MarkerClusterGroup(options);
+        };
+        console.log('MarkerClusterGroup initialized successfully');
+    } else if (typeof window.L.markerClusterGroup !== 'function') {
+        console.error('MarkerClusterGroup not available. Map clustering will not work.');
+        // Create a fallback function to prevent errors
+        window.L.markerClusterGroup = function(options) {
+            console.warn('Using fallback layer group instead of marker cluster');
+            return window.L.layerGroup();
+        };
+    }
 });

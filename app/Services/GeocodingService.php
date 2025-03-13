@@ -32,7 +32,8 @@ class GeocodingService
                 $prompt .= "\nCountry: {$countryName}";
             }
 
-            $prompt .= "\n\nPlease respond ONLY with the coordinates in this exact JSON format: {\"lat\": 12.345, \"long\": 67.890}";
+            $prompt .= "\n\nPlease respond ONLY with the coordinates in this exact JSON format: {\"lat\": 12.3456789, \"long\": 67.8901234}";
+            $prompt .= "\nEnsure that coordinates have exactly 7 decimal places for precision.";
             $prompt .= "\nDo not include any other text, explanations, or formatting.";
 
             // Call Grok-2 API
@@ -53,9 +54,13 @@ class GeocodingService
                 $coordinates = json_decode($jsonStr, true);
 
                 if (isset($coordinates['lat']) && (isset($coordinates['long']) || isset($coordinates['lng']))) {
+                    $lat = (float) $coordinates['lat'];
+                    $long = (float) (isset($coordinates['long']) ? $coordinates['long'] : $coordinates['lng']);
+
+                    // Format coordinates to have 7 decimal places
                     return [
-                        'lat' => (float) $coordinates['lat'],
-                        'long' => (float) (isset($coordinates['long']) ? $coordinates['long'] : $coordinates['lng'])
+                        'lat' => number_format($lat, 7, '.', ''),
+                        'long' => number_format($long, 7, '.', '')
                     ];
                 }
             }

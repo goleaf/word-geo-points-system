@@ -4,16 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\GeoPoint;
 use App\Services\GeocodingService;
+use App\Services\GeoPointDescriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class GeocodingController extends Controller
 {
     protected $geocodingService;
+    protected $descriptionService;
 
-    public function __construct(GeocodingService $geocodingService)
+    public function __construct(GeocodingService $geocodingService, GeoPointDescriptionService $descriptionService)
     {
         $this->geocodingService = $geocodingService;
+        $this->descriptionService = $descriptionService;
     }
 
     /**
@@ -54,14 +57,15 @@ class GeocodingController extends Controller
             }
 
             // Update the geo point with the coordinates
-            $geoPoint->lat = $coordinates['lat'];
-            $geoPoint->long = $coordinates['long'];
+            // Ensure coordinates are stored with 7 decimal places
+            $geoPoint->lat = number_format((float)$coordinates['lat'], 7, '.', '');
+            $geoPoint->long = number_format((float)$coordinates['long'], 7, '.', '');
             $geoPoint->save();
 
             // Generate description if it doesn't exist
             $descriptionField = "description_{$locale}";
             if (empty($geoPoint->{$descriptionField})) {
-                $description = $this->geocodingService->getDescription($locationName, $locale, $cityName, $countryName);
+                $description = $this->descriptionService->generateDescription($locationName, $locale, $cityName, $countryName);
                 if ($description) {
                     $geoPoint->{$descriptionField} = $description;
                     $geoPoint->save();
@@ -73,7 +77,10 @@ class GeocodingController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Coordinates updated successfully',
-                'coordinates' => $coordinates,
+                'coordinates' => [
+                    'lat' => $geoPoint->lat,
+                    'long' => $geoPoint->long
+                ],
                 'redirect' => $redirectRoute
             ]);
         } catch (\Exception $e) {
@@ -115,15 +122,27 @@ class GeocodingController extends Controller
                 return response()->json(['error' => 'Geocoding failed'], 500);
             }
 
-            // Generate description
-            $description = $this->geocodingService->getDescription($placeName, $locale, $cityName, $countryName);
+            // Ensure coordinates have 7 decimal places
+            $formattedCoordinates = [
+                'lat' => number_format((float)$coordinates['lat'], 7, '.', ''),
+                'long' => number_format((float)$coordinates['long'], 7, '.', '')
+            ];
+
+            // Generate description using the new service
+            $description = $this->descriptionService->generateDescription($placeName, $locale, $cityName, $countryName);
+
+            // Get language requirements for the modal
+            $requirements = $this->descriptionService->getLanguageRequirements($locale);
+            $wordCount = $description ? $this->descriptionService->countWords($description) : 0;
 
             return response()->json([
                 'success' => true,
                 'data' => [
                     'name' => $placeName,
-                    'coordinates' => $coordinates,
-                    'description' => $description
+                    'coordinates' => $formattedCoordinates,
+                    'description' => $description,
+                    'requirements' => $requirements,
+                    'word_count' => $wordCount
                 ]
             ]);
         } catch (\Exception $e) {

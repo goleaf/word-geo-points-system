@@ -32,10 +32,14 @@ function initGeocodingButtons() {
             geocodeLocation(geoPointId, locale)
                 .then(response => {
                     if (response.success) {
+                        // Format coordinates to display 7 decimal places
+                        const lat = parseFloat(response.coordinates.lat).toFixed(7);
+                        const long = parseFloat(response.coordinates.long).toFixed(7);
+
                         // Show success message with coordinates
                         Swal.fire({
                             title: 'Success!',
-                            html: `Coordinates updated successfully:<br>Latitude: ${response.coordinates.lat}<br>Longitude: ${response.coordinates.long}`,
+                            html: `Coordinates updated successfully:<br>Latitude: ${lat}<br>Longitude: ${long}`,
                             icon: 'success',
                             confirmButtonText: 'OK'
                         }).then(() => {
@@ -105,14 +109,30 @@ function initLocationDataModal() {
                     // Enable apply button
                     applyButton.disabled = false;
 
+                    // Format coordinates to display 7 decimal places
+                    const lat = parseFloat(response.data.coordinates.lat).toFixed(7);
+                    const long = parseFloat(response.data.coordinates.long).toFixed(7);
+
+                    // Update coordinates in the response data
+                    response.data.coordinates.lat = lat;
+                    response.data.coordinates.long = long;
+
                     // Store data in the modal
                     locationModal.dataset.locationData = JSON.stringify(response.data);
 
                     // Show preview
                     document.getElementById('previewName').textContent = response.data.name;
-                    document.getElementById('previewLat').textContent = response.data.coordinates.lat;
-                    document.getElementById('previewLong').textContent = response.data.coordinates.long;
+                    document.getElementById('previewLat').textContent = lat;
+                    document.getElementById('previewLong').textContent = long;
                     document.getElementById('previewDescription').textContent = response.data.description;
+
+                    // Calculate and display word count
+                    if (response.data.description) {
+                        const wordCount = response.data.description.split(/\s+/).filter(word => word.length > 0).length;
+                        document.getElementById('previewWordCount').textContent = wordCount;
+                    } else {
+                        document.getElementById('previewWordCount').textContent = '0';
+                    }
 
                     // Show preview section
                     document.getElementById('locationDataPreview').classList.remove('d-none');

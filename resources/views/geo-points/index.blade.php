@@ -109,7 +109,14 @@
                 </h5>
             </div>
             <div class="card-body">
-                <div id="map" style="height: 500px;"></div>
+                <div class="map-container">
+                    <div id="map-loading" class="map-loading">
+                        <div class="spinner-border text-primary map-loading-spinner" role="status">
+                            <span class="sr-only">Loading map...</span>
+                        </div>
+                    </div>
+                    <div id="map" class="h-100"></div>
+                </div>
             </div>
         </div>
 
@@ -132,6 +139,9 @@
 
                 // Initialize the map with all geo points
                 initMultiPointMap('map', geoPoints);
+
+                // Hide loading indicator after map is initialized
+                document.getElementById('map-loading').style.display = 'none';
             });
         </script>
 

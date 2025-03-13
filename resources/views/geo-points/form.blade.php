@@ -281,6 +281,30 @@
                         </select>
                     </div>
 
+                    <div class="card mb-3 border-info">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0"><i class="bi bi-info-circle"></i> Language Requirements for {{ strtoupper($currentLocale) }}</h6>
+                        </div>
+                        <div class="card-body">
+                            @php
+                                $requirements = config("languages.languages.{$currentLocale}.requirements") ?? [
+                                    'min_words' => 20,
+                                    'max_words' => 50,
+                                    'tone' => 'informative',
+                                    'focus' => 'historical and cultural significance',
+                                    'language_name' => config("languages.languages.{$currentLocale}.name") ?? $currentLocale
+                                ];
+                            @endphp
+                            <ul class="mb-0 ps-3">
+                                <li><strong>Words:</strong> {{ $requirements['min_words'] }} - {{ $requirements['max_words'] }}</li>
+                                <li><strong>Tone:</strong> {{ ucfirst($requirements['tone']) }}</li>
+                                <li><strong>Focus:</strong> {{ ucfirst($requirements['focus']) }}</li>
+                                <li><strong>Language:</strong> {{ config("languages.languages.{$currentLocale}.name") }}</li>
+                            </ul>
+                            <small class="text-muted mt-2 d-block">The generated description will adhere to these language-specific requirements.</small>
+                        </div>
+                    </div>
+
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary" id="generateLocationData">
                             <i class="bi bi-magic"></i> Generate Data
@@ -322,7 +346,10 @@
 
                     <div class="card mb-3">
                         <div class="card-header bg-light">
-                            <strong><i class="bi bi-card-text"></i> Description</strong>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong><i class="bi bi-card-text"></i> Description</strong>
+                                <small class="text-muted"><span id="previewWordCount">0</span> words</small>
+                            </div>
                         </div>
                         <div class="card-body">
                             <p id="previewDescription" class="mb-0"></p>
